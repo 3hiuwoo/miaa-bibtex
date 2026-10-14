@@ -24,9 +24,10 @@ its options, the report files BibCC writes, and the status and `next` words its 
 Read the fields you need, for example `bibcc surface | jq .status.next`, instead of parsing
 the help pages.
 
-The version gate: the set needs BibCC 0.6.0 or later. `bibcc surface` exists in 0.6.0 and
-later; if the command is unknown, the install is older and the set cannot run. Report that
-and stop.
+The version gate: the set needs BibCC 0.6.0 or later, the same gate as `miaa-bibtex-core`
+(`bibcc check quote -h` lists `--interactive`). `bibcc surface` itself needs BibCC 0.7.0 or
+later; if the command is unknown, fall back to reading `bibcc --help` and `bibcc COMMAND -h`
+and note in the report that the install predates `bibcc surface`.
 
 ## Diff against the documented surface
 
