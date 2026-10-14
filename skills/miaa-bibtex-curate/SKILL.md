@@ -1,6 +1,6 @@
 ---
 name: miaa-bibtex-curate
-description: The full from-scratch flow for a batch of papers, composing acquire, complete, decide, and verify. Use when the user hands over a batch of papers to add to a survey's .bib tree and wants the whole job done: official BibTeX fetched, fields completed, keys and titles decided, entries placed, and everything verified. Loads miaa-bibtex-core and runs the stage skills in order.
+description: The full from-scratch flow for a batch of papers, composing acquire, complete, verify, and decide. Use when the user hands over a batch of papers to add to a survey's .bib tree and wants the whole job done: official BibTeX fetched, fields completed, keys and titles decided, entries placed, and everything verified. Loads miaa-bibtex-core and runs the stage skills in order.
 metadata:
   author: MIAA lab
   version: "1.0"
