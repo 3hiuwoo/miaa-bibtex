@@ -86,6 +86,11 @@ Publisher-specific extras keep the publisher's sub-order (Springer LNCS: `series
 volume, …, editor, part`; ACM: `numpages` after `url`; PMLR: `editor, pdf`). `citation`
 is always last.
 
+`bibcc format` applies this order: the `format:` section of the survey's `.bibcc.yaml`,
+seeded by `bibcc config profile miaa --scope project`, turns on `sort_fields` with it, so
+`bibcc format bib/ --in-place` reorders fields and `--check` fails on a file out of order.
+`bibcc config where` shows the order that applies. Never reorder fields by hand.
+
 ## 4. Title style and protected terms
 
 - APA Title Case (default target; `bibcc check title`).
