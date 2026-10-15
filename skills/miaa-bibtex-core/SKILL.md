@@ -22,7 +22,6 @@ install. Adjust the path if the set is installed elsewhere. The reference files:
 | `$CORE/references/miaa-conventions.md` | Keys, entry types and fields, field order, title style, the marker, layout, PDFs |
 | `$CORE/references/bibcc-workflow.md` | The bibcc command cheat sheet and the output-file map |
 | `$CORE/references/retrieval-playbook.md` | Per-source endpoints, the rung-3 recipe, polite retrieval |
-| `$CORE/assets/protected_terms.txt` | The lab vocabulary for `bibcc check quote` |
 
 Every stage skill is thin on purpose: it names its commands and its scope, then defers to
 this file for the rules. Never restate a rule in a stage skill. When a rule changes, change
@@ -76,17 +75,18 @@ continue.
 | Dependency | Needed for | Detect | Install, only after a yes |
 |---|---|---|---|
 | `uv` (Python 3.10 or later) | Installing and running bibcc | `command -v uv` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| `bibcc` | Every deterministic step | `command -v bibcc`, then `bibcc check official -h \| grep -q -- --learn` | `uv tool install git+https://github.com/3hiuwoo/BibCC` (no tag: `main` holds only releases). Too old: the same command with `--force` |
+| `bibcc` | Every deterministic step | `command -v bibcc`, then `bibcc check quote -h \| grep -q -- --scope` | `uv tool install git+https://github.com/3hiuwoo/BibCC` (no tag: `main` holds only releases). Too old: the same command with `--force` |
 | venue library | `complete` | `bibcc venues where` in the survey repo | bibcc ships none. Seed the survey's project library once: `bibcc venues import miaa --scope project` at the repo root, then commit `.bibcc-venues.yaml` |
+| protected terms | `check quote` | `bibcc terms where` in the survey repo | Seed the survey's project terms file once: `bibcc terms import miaa --scope project` at the repo root, then commit `.bibcc-terms.txt` |
 | web fetch and search | Retrieval rung 2 | The harness's fetch or search tools exist | none; use what is there |
 | rung-3 browser | Login-gated and bot-blocked sites | `command -v agent-browser`, or a connected browser MCP | lab standard agent-browser, below |
 | optional | Large title batches, tidy repo | `S2_API_KEY` set; `.bibcc/` in `.gitignore` | mention only |
 
-The `bibcc check official -h | grep -q -- --learn` check is the version gate: an install
-without it is older than 0.7.0 and lacks venue schemas (`check official --learn`, and
-`check editions` checking entries against the schemas), family records, and
-`bibcc surface`. If the check still fails after a forced reinstall, stop and tell the
-user this set needs BibCC 0.7.0 or later. Any version that passes works, including a
+The `bibcc check quote -h | grep -q -- --scope` check is the version gate: an install
+without it is older than 0.8.0 and lacks the protected-terms files (`bibcc terms`, read by
+`check quote`), `check venues --apply`, venue schemas (`check official --learn`), family
+records, and `bibcc surface`. If the check still fails after a forced reinstall, stop and
+tell the user this set needs BibCC 0.8.0 or later. Any version that passes works, including a
 maintainer's editable `dev` checkout.
 
 Consequences to state in the question:
@@ -102,11 +102,12 @@ Install block, run only for the items the user approved:
 CORE=~/.agents/skills/miaa-bibtex-core                        # adjust if installed elsewhere
 command -v uv    >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 command -v bibcc >/dev/null || uv tool install git+https://github.com/3hiuwoo/BibCC
-bibcc check official -h | grep -q -- --learn ||                     # older than 0.7.0:
+bibcc check quote -h | grep -q -- --scope ||                        # older than 0.8.0:
   uv tool install --force git+https://github.com/3hiuwoo/BibCC        #   move to the latest release
-bibcc check official -h | grep -q -- --learn || echo 'needs BibCC 0.7.0 or later: stop here'
-bibcc --version && bibcc venues where                               # record the version in the run report
+bibcc check quote -h | grep -q -- --scope || echo 'needs BibCC 0.8.0 or later: stop here'
+bibcc --version && bibcc venues where && bibcc terms where          # record the version in the run report
 [ -f .bibcc-venues.yaml ] || bibcc venues import miaa --scope project   # survey repo root; commit the file
+[ -f .bibcc-terms.txt ] || bibcc terms import miaa --scope project      # survey repo root; commit the file
 grep -qs '^\.bibcc/' .gitignore || echo '.bibcc/' >> .gitignore    # in the survey repo
 # rung-3 browser, lab standard:
 brew install agent-browser 2>/dev/null || npm install -g agent-browser
@@ -179,14 +180,14 @@ skill you are running. The rows carry the report file, the row marker, and the a
 | `edition_schemas.txt` | `schema_lacks` | library | Proposed from entries alone (AAAI, ACM, Elsevier venues). Fetch one paper's official BibTeX by the ladder into `WORK/exports/` and `check official FILE --local WORK/exports/ --offline --learn --scope project`; only when no export is reachable, `check editions FILE --against bib/ --learn --scope project` |
 | `edition_fields.txt` | `missing` | complete | `check official FILE --apply F` for that entry; if no export has it, read it off the official page |
 | `check venues` log | cross-edition gaps | library | Fill the record from the official page of that edition |
-| `check venues` log | `Fields that every edition shares` | library | Move the value into the venue's `families:` record in `.bibcc-venues.yaml` and delete it from the editions; `check venues` again |
+| `check venues` log | `Fields that every edition shares` | library | `bibcc check venues --scope project --apply` moves them into the family record; never by hand. `check venues` again |
 | `add`, `upgrade` log | `month: the official BibTeX gives '...', a period across two months` | acquire, upgrade | Nothing to fix: the entry correctly has no month. Name the entry under Status in the run report |
 | `conflicts.txt` (`complete`) | `month` with library = `none` | complete | Unless the month came from the official BibTeX (then the record is wrong: fix it), `complete --in-place --resolve library --fields month` removes it |
 | `missing_venues.yaml` | blank values | library | Read the official proceedings or journal page; fill in; `complete --update-venues --scope project` |
 | `missing_venues.yaml` | blank `month` | library | Official dates page: one month means that month; across two months means `none`. Journal record: leave blank (each issue has its own month); non-monthly journal means `none` |
 | `field_issues.txt` | `conference_article` | complete | `bibcc complete FILE --in-place` retypes it to `@inproceedings`; never by hand |
 | `title_case.txt` | suggestions | decide | Judge each one |
-| `smart_protection.txt` | `Over-Braced: use ...` | decide | A method name stays whole: record it without braces in `protected_terms.txt` (recurring) or `.bibcc/<file>.bib/vocab.txt` (one-off), then rerun `check quote --apply`. Otherwise the split is right and `--apply` makes it |
+| `smart_protection.txt` | `Over-Braced: use ...` | decide | A method name stays whole: `bibcc terms add NAME --scope project` (without braces), then rerun `check quote --apply`. Otherwise the split is right and `--apply` makes it |
 | `smart_protection.txt` | other rows | decide | Judge each one |
 
 ## Run report (always, at the end)
@@ -266,4 +267,3 @@ deleting it.
 - `$CORE/references/miaa-conventions.md`: rules and tables.
 - `$CORE/references/retrieval-playbook.md`: per-source endpoints, the rung-3 recipe.
 - `$CORE/references/bibcc-workflow.md`: the command cheat sheet.
-- `$CORE/assets/protected_terms.txt`: the lab vocabulary.

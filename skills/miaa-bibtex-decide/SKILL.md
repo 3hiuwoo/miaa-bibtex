@@ -10,7 +10,9 @@ metadata:
 
 Load `miaa-bibtex-core` first. One aim: set the content that needs judgment. Keys, title
 case, braces, and taxonomy. The rules are in `$CORE/references/miaa-conventions.md` sections
-1, 4, and 8, and the vocabulary is `$CORE/assets/protected_terms.txt`.
+1, 4, and 8. The vocabulary is the survey's project terms file (`.bibcc-terms.txt`, seeded
+from the lab's shared list in preflight) and the user terms file; `bibcc terms list` shows
+both.
 
 Scope is tunable. The request may narrow this skill to one concern, for example only check
 quotation, or only decide keys. Default to all four concerns when nothing is narrowed.
@@ -32,11 +34,11 @@ final after this step**; PDFs are named by them.
 ## Title case and protection
 
 APA Title Case. Decide which terms get braces, one pair per term (`{CLIP}`, `{ImageNet}`,
-`{CODA-Prompt}: ...`), never the whole title. To brace the lab vocabulary wherever it appears
+`{CODA-Prompt}: ...`), never the whole title. To brace the vocabulary wherever it appears
 with the same case, then see what else bibcc suggests:
 
 ```bash
-bibcc check quote bib/<file>.bib --apply --vocab-file "$CORE/assets/protected_terms.txt"
+bibcc check quote bib/<file>.bib --apply
 bibcc check title bib/<file>.bib
 ```
 
@@ -44,10 +46,15 @@ bibcc check title bib/<file>.bib
 (`{CLIP-Based}` becomes `{CLIP}-Based`); the other suggestions are hints to judge. An
 `Over-Braced` row is a judgment call: bibcc cannot tell a method name from a description,
 because `{CIP-Net}` and `{CLIP-Based}` have the same shape. For a method name, record it
-without braces in `$CORE/assets/protected_terms.txt` when it recurs across surveys, or in the
-file's `.bibcc/<file>.bib/vocab.txt` when it is one-off, then rerun the `--apply` command.
-Otherwise the split is right and `--apply` makes it. Never re-brace compounds by hand. Append
-new recurring terms to the vocabulary file.
+without braces in the project terms file, then rerun the `--apply` command:
+
+```bash
+bibcc terms add CIP-Net --scope project   # commit .bibcc-terms.txt
+```
+
+Otherwise the split is right and `--apply` makes it. Never re-brace compounds by hand, and
+never edit a terms file by hand. Terms worth having lab-wide go upstream into BibCC's
+`examples/terms/miaa.txt` by pull request.
 
 ## Taxonomy
 

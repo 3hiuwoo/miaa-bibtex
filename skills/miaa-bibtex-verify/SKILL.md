@@ -28,7 +28,7 @@ for f in $(find bib -name '*.bib' -not -path '*/.bibcc/*'); do
   bibcc check keys    "$f" --strict                 || echo "FAIL keys: $f"
   bibcc check editions "$f" --against bib/ --strict || echo "FAIL editions: $f"
   bibcc check title "$f"                            # hints
-  bibcc check quote "$f" --vocab-file "$CORE/assets/protected_terms.txt"   # hints
+  bibcc check quote "$f"                            # hints; reads the terms files
 done
 bibcc format bib/ --check              # must exit 0
 ```

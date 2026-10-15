@@ -3,7 +3,7 @@
 Install once: install `uv` if missing (`curl -LsSf https://astral.sh/uv/install.sh | sh`),
 then `uv tool install git+https://github.com/3hiuwoo/BibCC`. With no tag this is the
 latest release (`main` holds only releases; development is on `dev`). This sheet follows
-BibCC 0.7.0; if `bibcc check official -h` doesn't list `--learn`, the install is too
+BibCC 0.8.0; if `bibcc check quote -h` doesn't list `--scope`, the install is too
 old: rerun the install with `--force`. BibCC maintainers instead run
 `uv sync && uv tool install --editable .` in a checkout of `dev`. Run `bibcc <cmd> -h` for
 full options; it is the authority when it disagrees with this sheet.
@@ -16,6 +16,11 @@ coauthors pool venue records through git. `bibcc venues where` shows what applie
 reuse a survey's venues elsewhere, merge its project library into the user library (adds
 only; differing values are kept and reported): `bibcc venues import .bibcc-venues.yaml
 [--dry-run]` (default `--scope user`).
+
+Protected terms live in the same two scopes: the **user terms file**
+(`~/.config/bibcc/terms.txt`, or `$BIBCC_TERMS`) and the survey's **project terms file**
+(`.bibcc-terms.txt`, the nearest one above the `.bib` file). `check quote` reads both. Seed
+the project file once with `bibcc terms import miaa --scope project` and commit it.
 
 Reports about `FILE.bib` go to `.bibcc/FILE.bib/` next to it; logs to
 `.bibcc/FILE.bib/logs/`. A file that is itself inside `.bibcc/` gets `reports/FILE.bib/`
@@ -32,7 +37,7 @@ column of `add.txt`, `upgrade.txt`, `published.txt`, and `official_unchecked.txt
 the papers left to do. bibcc does every step it can; the agent does only what a report
 hands over, and a missing batch feature belongs in bibcc, not in a workaround.
 
-Env: `BIBCC_VENUES` (user venue library path), `S2_API_KEY` (higher Semantic Scholar limits),
+Env: `BIBCC_VENUES` (user venue library path), `BIBCC_TERMS` (user terms file path), `S2_API_KEY` (higher Semantic Scholar limits),
 `BIBCC_CACHE` (downloaded official BibTeX, kept 30 days; default `~/.cache/bibcc`; `off`
 turns it off).
 
@@ -44,7 +49,7 @@ turns it off).
 | 3 place | (no command — move entries from `added.bib` into the topic file; wire new files into `bib/all_bibs.tex`) |
 | 4 interim | automatic in `add`/`upgrade`; add the `% TODO:` comment by hand; later `bibcc upgrade --report-only bib/` then `bibcc upgrade bib/x.bib --in-place` |
 | 5 patch fields | `bibcc complete bib/x.bib [--in-place\|--output out.bib] [--update-venues --scope project] [--online] [--resolve library --fields F]` · `bibcc check official bib/x.bib [--apply F1,F2\|all] [--local DIR [--offline]] [--learn --scope project]` · `bibcc check editions bib/x.bib [--against bib/ [--learn --scope project]]` · `bibcc check fields bib/x.bib --apply` |
-| 6 keys/titles | `bibcc check keys bib/x.bib` · `bibcc check title bib/x.bib [--apply\|--interactive]` · `bibcc check quote bib/x.bib [--apply\|--interactive] [--terms A,B] [--vocab-file FILE]` |
+| 6 keys/titles | `bibcc check keys bib/x.bib` · `bibcc check title bib/x.bib [--apply\|--interactive]` · `bibcc check quote bib/x.bib [--apply\|--interactive [--scope project]] [--terms A,B]` · `bibcc terms add TERM --scope project` |
 | 7 format | `bibcc format bib/ --in-place` (or `--check` in CI) |
 | 8 citations | `bibcc scholar cite bib/x.bib -i` (or `--open`) |
 | verify | `bibcc scholar titles bib/x.bib` · per file: `bibcc check missing\|fields\|keys bib/x.bib --strict` (`fields` with `--against bib/`; `check` takes one file and one check; loop over `find bib -name '*.bib'`) · touched files: `bibcc check official bib/x.bib --strict` |
@@ -60,16 +65,16 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   exempt from the month check and listed in the log.
 - `title [--apply|--interactive] [--style apa] [--extra-stopwords W]` — suggests APA title
   case; `--apply` and `--interactive` rewrite titles only.
-- `quote [--terms A,B] [--vocab-file FILE] [--no-default] [--min-length N] [--apply|--interactive]` —
+- `quote [--terms A,B] [--vocab-file FILE] [--no-default] [--min-length N] [--apply|--interactive [--scope S]]` —
   **suggests** `{braces}` for acronyms and terms, and reports compounds braced as a whole
-  when only some parts need braces (`{CLIP-Based}` → `{CLIP}-Based`). `--apply` braces the
-  `--terms`/`--vocab-file` terms in titles (same case only, verified edit) and splits the
-  over-braced compounds, then reports the rest. Never applies the built-in vocabulary or
-  the heuristic suggestions. `--interactive` reviews each compound split one at a time
-  (split, skip, edit, or keep whole). A compound kept whole goes to
-  `.bibcc/<file>.bib/vocab.txt` (one term per line), which `quote` always reads on top of
-  `--terms`/`--vocab-file`, so a method name such as `CIP-Net` stays whole for good;
-  write that file directly to feed the decision in without prompting.
+  when only some parts need braces (`{CLIP-Based}` → `{CLIP}-Based`). Reads the user and
+  project terms files (logged) on top of `--terms`/`--vocab-file`. `--apply` braces those
+  terms in titles (same case only, verified edit) and splits the over-braced compounds,
+  then reports the rest. Never applies the built-in vocabulary or the heuristic
+  suggestions. `--interactive` reviews each compound split one at a time (split, skip,
+  edit, or keep whole); a compound kept whole goes to the user terms file, or with
+  `--scope project` to the project's. To feed the decision in without prompting,
+  `bibcc terms add CIP-Net --scope project`, so a method name stays whole for good.
 - `keys` — validates `METHOD_AUTHOR_VENUEYEAR`; reports format, author (first author's
   surname; compound and accent-free forms accepted), venue, and year issues. Suggests
   canonical venue casing. Does **not** rename.
@@ -110,11 +115,13 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   `schema_differs` with field `entry_fields`: the venue's schema versus the downloaded
   BibTeX; `--learn` writes them into the library), `official_unchecked.txt` (`entry_id status detail url next`; status
   `no_bibtex`, `failed`, `mismatch`; `next` `by hand`, `retry`, `wait`, `check`).
-- `venues [PATH] [--venues FILE] [--journal-fields F] [--proceedings-fields F]` — audit
+- `venues [PATH] [--venues FILE | --scope S] [--apply] [--journal-fields F] [--proceedings-fields F]` — audit
   the user and project venue libraries, each on its own (`--venues FILE`: only that file,
-  a `missing_venues.yaml` works too), including fields one edition of a conference has and
-  another lacks, values every edition shares (move them into a family record), and the
-  family records with their editions and schemas.
+  a `missing_venues.yaml` works too; `--scope`: only that library), including fields one
+  edition of a conference has and another lacks, values every published edition shares,
+  and the family records with their editions and schemas. `--apply` moves the shared
+  values into the family record (created when missing) and saves the library; no
+  edition's effective fields change.
 
 **`complete`** — add fields an entry lacks, **from the venue library only**; existing values
 never overwritten (conflicts reported). Dry-run default.
@@ -204,7 +211,14 @@ fields the project overrides, which one is written); `init [--scope user|project
 (empty library; project = `./.bibcc-venues.yaml`); `import SOURCE [--scope user|project |
 --venues FILE] [--overwrite] [--dry-run]` (SOURCE = file, URL, or shared name like `miaa`;
 only adds, keeps your values where they differ unless `--overwrite`); `examples` (list
-the shared libraries in BibCC's `examples/venues/`).
+the shared libraries in BibCC's `examples/venues/`); `providers [PATH] [--format json]`
+(where each conference's official BibTeX comes from, and whether the row is built in or
+set by a family record).
+
+**`terms`** — manage the protected-terms files. `where [PATH]`; `list`; `add TERM…
+[--scope user|project | --file FILE]` (adds the terms the file lacks, ignoring case);
+`import SOURCE [--scope …] [--dry-run]` (SOURCE = file, URL, or shared name like `miaa`);
+`examples` (the shared lists in BibCC's `examples/terms/`).
 
 ## Output files
 
@@ -251,8 +265,8 @@ the BibCC repo.
 - Rename existing keys (`upgrade` keeps them; `add` only suggests).
 - Apply `{braces}` from `check quote` (it only suggests; `--apply` applies only the terms you list).
 - Tell a method-name compound (`{CIP-Net}`) from a descriptive one (`{CLIP-Based}`): the
-  over-braced report hands that over. Answer through `protected_terms.txt` or
-  `.bibcc/<file>.bib/vocab.txt`, then rerun `--apply`.
+  over-braced report hands that over. Answer with `bibcc terms add NAME --scope project`,
+  then rerun `--apply`.
 - Query Google Scholar or DBLP (Scholar is browser-only; DBLP is behind a bot challenge).
 - Download from AAAI / ACM / Elsevier (blocked) — writes empty entries instead; import the
   BibTeX you fetch with `bibcc add FILE.bib` to fill them, or compare existing entries

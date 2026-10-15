@@ -25,8 +25,8 @@ and the `issue_type` words of the check reports, by report file. Read the fields
 for example `bibcc surface | jq .status.next` or `bibcc surface | jq .issues`, instead of
 parsing the help pages.
 
-The version gate: the set needs BibCC 0.7.0 or later, the same gate as `miaa-bibtex-core`
-(`bibcc check official -h` lists `--learn`). If `bibcc surface` is unknown, the install
+The version gate: the set needs BibCC 0.8.0 or later, the same gate as `miaa-bibtex-core`
+(`bibcc check quote -h` lists `--scope`). If `bibcc surface` is unknown, the install
 predates 0.7.0: fall back to reading `bibcc --help` and `bibcc COMMAND -h`, and note in the
 report that the install is too old for the set.
 

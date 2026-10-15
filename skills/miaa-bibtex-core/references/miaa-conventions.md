@@ -95,11 +95,12 @@ is always last.
 - Same in `booktitle` / `journal`: `2023 {IEEE/CVF} Conference on … ({CVPR})`,
   `{IEEE} Transactions on …`.
 - The agent decides the braces when it curates the entry; `bibcc check quote` with the
-  lab vocabulary (`--vocab-file assets/protected_terms.txt`) is the safety net. Add
-  recurring terms to that file; pass one-off survey terms with `--terms A,B`, or list
-  them in the file's `.bibcc/<file>.bib/vocab.txt` (one per line, always read). A
-  hyphenated method name braced whole (`{CODA-Prompt}`, `{CIP-Net}`) must be in one of
-  them, or `check quote` reports it as over-braced and `--apply` splits it.
+  survey's terms is the safety net. It reads the project terms file (`.bibcc-terms.txt`,
+  seeded from the lab's shared `miaa` list and committed) and the user terms file. Add a
+  survey's terms with `bibcc terms add TERM --scope project`; propose lab-wide terms
+  upstream to BibCC's `examples/terms/miaa.txt`. A hyphenated method name braced whole
+  (`{CODA-Prompt}`, `{CIP-Net}`) must be in a terms file, or `check quote` reports it as
+  over-braced and `--apply` splits it.
 
 ## 5. Interim / preprint marker
 

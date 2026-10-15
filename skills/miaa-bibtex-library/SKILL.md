@@ -30,6 +30,8 @@ coauthor. The user library is personal and cross-survey.
 
 ```bash
 bibcc check venues                  # records one edition has and another lacks; shared values
+bibcc check venues --scope project --apply   # move the values every edition shares into family records
+bibcc venues providers              # where each conference's official BibTeX comes from
 bibcc check official bib/<file>.bib --learn --scope project   # learn each venue's schema
 bibcc check editions bib/<file>.bib --against bib/   # schemas proposed for venues without one
 ```
@@ -50,8 +52,11 @@ When `official_venues.txt` reports `library_lacks` or `library_differs`, fix the
 overwrite the entries that copied it:
 `bibcc complete bib/<file>.bib --in-place --resolve library --fields F1,F2`. When `check
 venues` reports a cross-edition gap, fill the record from the official page of that edition.
-When it lists fields that every edition shares, move them into the conference's `families:`
-record and delete them from the editions.
+When it lists fields that every edition shares, run `bibcc check venues --scope project
+--apply`: it moves them into the conference's family record, creating it when missing, and
+deletes them from the editions without changing any edition's fields. Never move them by
+hand. The family records also carry where a conference's official BibTeX comes from;
+`bibcc venues providers` prints the table that applies, built in or set by a family record.
 
 ## Venue schemas
 
