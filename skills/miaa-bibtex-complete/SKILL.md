@@ -41,7 +41,7 @@ bibcc compare first:
 ```bash
 bibcc check official bib/<file>.bib                     # downloads each entry's official BibTeX again
 bibcc check official bib/<file>.bib --apply pages,doi   # add official values the entries lack
-bibcc check editions bib/<file>.bib --against bib/      # fields the venue's other entries have
+bibcc check editions bib/<file>.bib --against bib/      # fields of the venue's schema the entries lack
 ```
 
 For AAAI, ACM, and Elsevier, bibcc cannot download: fetch the official BibTeX by the ladder
@@ -67,9 +67,10 @@ as `conference_article`; `bibcc complete FILE --in-place` retypes them.
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: `official_fields.txt` (`upstream_only`,
-`differs`, `local_only`), `edition_fields.txt` (`same_year`, `other_years`),
-`conflicts.txt`, and `field_issues.txt`. The `official_venues.txt` rows and the
-`missing_venues.yaml` blanks belong to `miaa-bibtex-library`.
+`differs`, `local_only`), `edition_fields.txt` (`missing`),
+`conflicts.txt`, and `field_issues.txt`. The `official_venues.txt` rows, the
+`edition_schemas.txt` proposals, and the `missing_venues.yaml` blanks belong to
+`miaa-bibtex-library`.
 
 ## Output
 

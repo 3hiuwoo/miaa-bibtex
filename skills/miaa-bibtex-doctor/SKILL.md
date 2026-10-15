@@ -20,14 +20,15 @@ bibcc --version
 ```
 
 `bibcc surface` is the machine-readable command surface: every command and subcommand with
-its options, the report files BibCC writes, and the status and `next` words its reports use.
-Read the fields you need, for example `bibcc surface | jq .status.next`, instead of parsing
-the help pages.
+its options, the report files BibCC writes, the status and `next` words its reports use,
+and the `issue_type` words of the check reports, by report file. Read the fields you need,
+for example `bibcc surface | jq .status.next` or `bibcc surface | jq .issues`, instead of
+parsing the help pages.
 
-The version gate: the set needs BibCC 0.6.0 or later, the same gate as `miaa-bibtex-core`
-(`bibcc check quote -h` lists `--interactive`). `bibcc surface` itself needs BibCC 0.7.0 or
-later; if the command is unknown, fall back to reading `bibcc --help` and `bibcc COMMAND -h`
-and note in the report that the install predates `bibcc surface`.
+The version gate: the set needs BibCC 0.7.0 or later, the same gate as `miaa-bibtex-core`
+(`bibcc check official -h` lists `--learn`). If `bibcc surface` is unknown, the install
+predates 0.7.0: fall back to reading `bibcc --help` and `bibcc COMMAND -h`, and note in the
+report that the install is too old for the set.
 
 ## Diff against the documented surface
 
@@ -40,6 +41,8 @@ used across the set. Flag every difference:
 - A report file added or removed, from `.reports`, checked against the workflow sheet and the
   master report-to-action table in core.
 - A status or `next` word changed, from `.status`, checked against the master table in core.
+- An `issue_type` word added or removed, from `.issues`, checked against the master table in
+  core and the report columns in the workflow sheet.
 
 ## Check internal consistency
 

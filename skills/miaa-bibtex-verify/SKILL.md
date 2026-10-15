@@ -26,7 +26,7 @@ for f in $(find bib -name '*.bib' -not -path '*/.bibcc/*'); do
   bibcc check missing "$f" --strict                 || echo "FAIL missing: $f"
   bibcc check fields  "$f" --against bib/ --strict  || echo "FAIL fields: $f"
   bibcc check keys    "$f" --strict                 || echo "FAIL keys: $f"
-  bibcc check editions "$f" --against bib/          # hints: judge each one
+  bibcc check editions "$f" --against bib/ --strict || echo "FAIL editions: $f"
   bibcc check title "$f"                            # hints
   bibcc check quote "$f" --vocab-file "$CORE/assets/protected_terms.txt"   # hints
 done
@@ -34,8 +34,10 @@ bibcc format bib/ --check              # must exit 0
 ```
 
 Every gate line must pass; fix what it reports, in `bib/.bibcc/<file>.bib/`. `missing` exempts
-venues whose record says `month: none`. Edition, title-case, and brace findings are hints, not
-failures; hand them to `miaa-bibtex-decide`.
+venues whose record says `month: none` and fields outside the venue's schema. `editions` fails
+only on entries that lack a field of their venue's schema; its schema proposals
+(`edition_schemas.txt`) go to `miaa-bibtex-library`. Title-case and brace findings are hints,
+not failures; hand them to `miaa-bibtex-decide`.
 
 ## Re-check existing entries against the official BibTeX
 
@@ -43,14 +45,15 @@ For entries that came from elsewhere (a colleague, Google Scholar, an older run)
 with their official BibTeX again, one file at a time:
 
 ```bash
-bibcc check official bib/<file>.bib --delay 2        # entries: official_fields.txt; venues: official_venues.txt
+bibcc check official bib/<file>.bib --delay 2 --learn --scope project   # entries: official_fields.txt; venues and schemas: official_venues.txt
 bibcc check official bib/<file>.bib --local .bibcc/work/<batch>/exports/ --offline   # AAAI, ACM, Elsevier
-bibcc check editions bib/<file>.bib --against bib/
+bibcc check editions bib/<file>.bib --against bib/   # entries against the schemas just learned
 bibcc check venues                                   # library records one edition has and another lacks
 ```
 
 `check official --strict` fails on `upstream_only`, `differs`, and `type` findings; run it on
-the files this batch touched, not the whole tree, because it downloads every entry again. The
+the files this batch touched, not the whole tree, because it downloads every entry again (a
+rerun within 30 days reads the disk cache; `--refresh` downloads again). The
 `--apply` step that adds back missing official fields belongs to `miaa-bibtex-complete`; this
 skill runs the comparison and investigates the rows it owns.
 

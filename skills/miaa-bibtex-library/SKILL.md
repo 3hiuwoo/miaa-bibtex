@@ -29,8 +29,9 @@ coauthor. The user library is personal and cross-survey.
 ## Audit and fill
 
 ```bash
-bibcc check venues                  # records one edition has and another lacks
-bibcc check editions bib/<file>.bib --against bib/   # fields the venue's other entries have
+bibcc check venues                  # records one edition has and another lacks; shared values
+bibcc check official bib/<file>.bib --learn --scope project   # learn each venue's schema
+bibcc check editions bib/<file>.bib --against bib/   # schemas proposed for venues without one
 ```
 
 Fill the blanks in `.bibcc/<file>/missing_venues.yaml` from the official conference or journal
@@ -49,6 +50,16 @@ When `official_venues.txt` reports `library_lacks` or `library_differs`, fix the
 overwrite the entries that copied it:
 `bibcc complete bib/<file>.bib --in-place --resolve library --fields F1,F2`. When `check
 venues` reports a cross-edition gap, fill the record from the official page of that edition.
+When it lists fields that every edition shares, move them into the conference's `families:`
+record and delete them from the editions.
+
+## Venue schemas
+
+A schema (`entry_fields`) lists the per-paper fields a venue's official BibTeX has; `check
+editions` checks entries against it and `check missing` skips fields outside it. bibcc learns
+them: `check official --learn` from the downloaded BibTeX, and `check editions --learn` from
+the entries alone. For `schema_lacks` and `schema_differs` rows, follow the
+master table in `miaa-bibtex-core`.
 To reuse a survey's venues elsewhere, merge its project library into the user library once the
 user agrees (it only adds; differing values are kept and reported):
 `bibcc venues import .bibcc-venues.yaml`, then without `--dry-run`. Venues worth having
@@ -57,8 +68,9 @@ lab-wide go upstream into BibCC's `examples/venues/miaa.yaml` by pull request.
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: `official_venues.txt` (`library_lacks`,
-`library_differs`), the `check venues` cross-edition gaps, and the `missing_venues.yaml` blank
-values and blank `month`.
+`library_differs`, `schema_lacks`, `schema_differs`), `edition_schemas.txt`
+(`schema_lacks`), the `check venues` cross-edition gaps and shared values, and the
+`missing_venues.yaml` blank values and blank `month`.
 
 ## Output
 

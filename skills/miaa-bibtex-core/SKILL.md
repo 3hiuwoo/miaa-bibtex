@@ -76,17 +76,17 @@ continue.
 | Dependency | Needed for | Detect | Install, only after a yes |
 |---|---|---|---|
 | `uv` (Python 3.10 or later) | Installing and running bibcc | `command -v uv` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| `bibcc` | Every deterministic step | `command -v bibcc`, then `bibcc check quote -h \| grep -q -- --interactive` | `uv tool install git+https://github.com/3hiuwoo/BibCC` (no tag: `main` holds only releases). Too old: the same command with `--force` |
+| `bibcc` | Every deterministic step | `command -v bibcc`, then `bibcc check official -h \| grep -q -- --learn` | `uv tool install git+https://github.com/3hiuwoo/BibCC` (no tag: `main` holds only releases). Too old: the same command with `--force` |
 | venue library | `complete` | `bibcc venues where` in the survey repo | bibcc ships none. Seed the survey's project library once: `bibcc venues import miaa --scope project` at the repo root, then commit `.bibcc-venues.yaml` |
 | web fetch and search | Retrieval rung 2 | The harness's fetch or search tools exist | none; use what is there |
 | rung-3 browser | Login-gated and bot-blocked sites | `command -v agent-browser`, or a connected browser MCP | lab standard agent-browser, below |
 | optional | Large title batches, tidy repo | `S2_API_KEY` set; `.bibcc/` in `.gitignore` | mention only |
 
-The `bibcc check quote -h | grep -q -- --interactive` check is the version gate: an install
-without it is older than 0.6.0 and lacks `check` subcommands, `check official`,
-`check editions`, `check fields --apply`, `check quote --interactive`, and
-`complete --resolve`. If the check still fails after a forced reinstall, stop and tell the
-user this set needs BibCC 0.6.0 or later. Any version that passes works, including a
+The `bibcc check official -h | grep -q -- --learn` check is the version gate: an install
+without it is older than 0.7.0 and lacks venue schemas (`check official --learn`, and
+`check editions` checking entries against the schemas), family records, and
+`bibcc surface`. If the check still fails after a forced reinstall, stop and tell the
+user this set needs BibCC 0.7.0 or later. Any version that passes works, including a
 maintainer's editable `dev` checkout.
 
 Consequences to state in the question:
@@ -102,9 +102,9 @@ Install block, run only for the items the user approved:
 CORE=~/.agents/skills/miaa-bibtex-core                        # adjust if installed elsewhere
 command -v uv    >/dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 command -v bibcc >/dev/null || uv tool install git+https://github.com/3hiuwoo/BibCC
-bibcc check quote -h | grep -q -- --interactive ||                  # older than 0.6.0:
+bibcc check official -h | grep -q -- --learn ||                     # older than 0.7.0:
   uv tool install --force git+https://github.com/3hiuwoo/BibCC        #   move to the latest release
-bibcc check quote -h | grep -q -- --interactive || echo 'needs BibCC 0.6.0 or later: stop here'
+bibcc check official -h | grep -q -- --learn || echo 'needs BibCC 0.7.0 or later: stop here'
 bibcc --version && bibcc venues where                               # record the version in the run report
 [ -f .bibcc-venues.yaml ] || bibcc venues import miaa --scope project   # survey repo root; commit the file
 grep -qs '^\.bibcc/' .gitignore || echo '.bibcc/' >> .gitignore    # in the survey repo
@@ -153,7 +153,7 @@ instructions. Do not keep looping.
 | Locate papers, download official BibTeX, dedupe against `bib/` (`add`) | Resolve the batch from any input; pick the best identifier per paper |
 | Replace interim or preprint entries once published (`upgrade`) | Retrieve BibTeX and PDFs from blocked or unsupported sites via the ladder |
 | Add venue-shared fields from the venue library; propose unknown venues (`complete`) | Research missing values on official pages; fill the missing-venues YAML |
-| Compare entries with their official BibTeX (`check official`); spot fields the venue's other entries have (`check editions`) | Fetch the official BibTeX bibcc cannot download; judge `differs` and `local_only` findings |
+| Compare entries with their official BibTeX (`check official`); learn each venue's schema into the library (`--learn`); check entries against it (`check editions`) | Fetch the official BibTeX bibcc cannot download; judge `differs` and `local_only` findings, and schemas proposed from entries alone |
 | Validate keys, title case, braces, field typos, interim leftovers, duplicates (`check`) | Decide the citation key, the braces, and the taxonomy file |
 | Whole-file layout (`format`); align a PDF library, rename reference-manager exports (`librarian`) | Download PDFs and save them as `<key>.pdf`; write the run report |
 
@@ -174,9 +174,12 @@ skill you are running. The rows carry the report file, the row marker, and the a
 | `official_fields.txt` | `differs` | complete | The official value wins (precedence 1); edit the entry by hand, unless the difference is a MIAA layer (key, title braces) |
 | `official_fields.txt` | `local_only` | complete | Keep `venue`, `citation`, and library fields; remove interim leftovers with `check fields --apply`; for others, check the official page, then keep or remove |
 | `official_venues.txt` | `library_lacks`, `library_differs` | library | Fix the venue library record, then `complete --in-place --resolve library --fields F` |
-| `edition_fields.txt` | `same_year` | complete | `check official FILE --apply F` for that entry; if no export has it, read it off the official page |
-| `edition_fields.txt` | `other_years` | complete | Check this year's official export first: the venue may have changed its BibTeX |
+| `official_venues.txt` | `schema_lacks` | library | `bibcc check official FILE --learn --scope project`; never write `entry_fields` by hand |
+| `official_venues.txt` | `schema_differs` | library | Confirm on the official page that the venue changed its export (a new year), then `check official FILE --learn --scope project`; if not, the downloaded BibTeX is odd: leave the schema |
+| `edition_schemas.txt` | `schema_lacks` | library | Proposed from entries alone (AAAI, ACM, Elsevier venues). Fetch one paper's official BibTeX by the ladder into `WORK/exports/` and `check official FILE --local WORK/exports/ --offline --learn --scope project`; only when no export is reachable, `check editions FILE --against bib/ --learn --scope project` |
+| `edition_fields.txt` | `missing` | complete | `check official FILE --apply F` for that entry; if no export has it, read it off the official page |
 | `check venues` log | cross-edition gaps | library | Fill the record from the official page of that edition |
+| `check venues` log | `Fields that every edition shares` | library | Move the value into the venue's `families:` record in `.bibcc-venues.yaml` and delete it from the editions; `check venues` again |
 | `add`, `upgrade` log | `month: the official BibTeX gives '...', a period across two months` | acquire, upgrade | Nothing to fix: the entry correctly has no month. Name the entry under Status in the run report |
 | `conflicts.txt` (`complete`) | `month` with library = `none` | complete | Unless the month came from the official BibTeX (then the record is wrong: fix it), `complete --in-place --resolve library --fields month` removes it |
 | `missing_venues.yaml` | blank values | library | Read the official proceedings or journal page; fill in; `complete --update-venues --scope project` |

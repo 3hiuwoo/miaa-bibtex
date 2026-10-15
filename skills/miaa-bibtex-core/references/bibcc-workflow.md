@@ -3,7 +3,7 @@
 Install once: install `uv` if missing (`curl -LsSf https://astral.sh/uv/install.sh | sh`),
 then `uv tool install git+https://github.com/3hiuwoo/BibCC`. With no tag this is the
 latest release (`main` holds only releases; development is on `dev`). This sheet follows
-BibCC 0.6.0; if `bibcc check official -h` doesn't list `--offline`, the install is too
+BibCC 0.7.0; if `bibcc check official -h` doesn't list `--learn`, the install is too
 old: rerun the install with `--force`. BibCC maintainers instead run
 `uv sync && uv tool install --editable .` in a checkout of `dev`. Run `bibcc <cmd> -h` for
 full options; it is the authority when it disagrees with this sheet.
@@ -32,7 +32,9 @@ column of `add.txt`, `upgrade.txt`, `published.txt`, and `official_unchecked.txt
 the papers left to do. bibcc does every step it can; the agent does only what a report
 hands over, and a missing batch feature belongs in bibcc, not in a workaround.
 
-Env: `BIBCC_VENUES` (user venue library path), `S2_API_KEY` (higher Semantic Scholar limits).
+Env: `BIBCC_VENUES` (user venue library path), `S2_API_KEY` (higher Semantic Scholar limits),
+`BIBCC_CACHE` (downloaded official BibTeX, kept 30 days; default `~/.cache/bibcc`; `off`
+turns it off).
 
 ## Map to the SOP steps
 
@@ -41,7 +43,7 @@ Env: `BIBCC_VENUES` (user venue library path), `S2_API_KEY` (higher Semantic Sch
 | 1–2 collect | `bibcc add <doi\|arxiv\|url\|"title"\|FILE.bib\|DIR> … --against bib/ [--from papers.csv\|ids.txt] [--retry] [--preprint] [--dry-run]` |
 | 3 place | (no command — move entries from `added.bib` into the topic file; wire new files into `bib/all_bibs.tex`) |
 | 4 interim | automatic in `add`/`upgrade`; add the `% TODO:` comment by hand; later `bibcc upgrade --report-only bib/` then `bibcc upgrade bib/x.bib --in-place` |
-| 5 patch fields | `bibcc complete bib/x.bib [--in-place\|--output out.bib] [--update-venues --scope project] [--online] [--resolve library --fields F]` · `bibcc check official bib/x.bib [--apply F1,F2\|all] [--local DIR [--offline]]` · `bibcc check editions bib/x.bib --against bib/` · `bibcc check fields bib/x.bib --apply` |
+| 5 patch fields | `bibcc complete bib/x.bib [--in-place\|--output out.bib] [--update-venues --scope project] [--online] [--resolve library --fields F]` · `bibcc check official bib/x.bib [--apply F1,F2\|all] [--local DIR [--offline]] [--learn --scope project]` · `bibcc check editions bib/x.bib [--against bib/ [--learn --scope project]]` · `bibcc check fields bib/x.bib --apply` |
 | 6 keys/titles | `bibcc check keys bib/x.bib` · `bibcc check title bib/x.bib [--apply\|--interactive]` · `bibcc check quote bib/x.bib [--apply\|--interactive] [--terms A,B] [--vocab-file FILE]` |
 | 7 format | `bibcc format bib/ --in-place` (or `--check` in CI) |
 | 8 citations | `bibcc scholar cite bib/x.bib -i` (or `--open`) |
@@ -79,15 +81,21 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   `journal = {Proceedings of … Conference …}` (`conference_article`; `complete` fixes
   them), and duplicates (same DOI/arXiv ID/title, or duplicate key)
   in the file and in `--against`. `--apply` removes the interim fields and the empty fields only.
-- `editions [--against PATH] [--ignore-fields F] [--include-fields F] [--venues FILE]` —
-  fields that most other entries of the same venue have and an entry lacks, grouped across
-  editions (ICML 2024 and 2025 are one venue). `same_year`: most entries of that year have
-  it (probably incomplete; counts for `--strict`); `other_years`: most other years have it
-  (the venue may have changed its BibTeX). Ignores the fields every entry has (`title`, `author`,
-  `year`, `booktitle`, `journal`), `citation`, and exporter bookkeeping. Report `edition_fields.txt` (`entry_id venue year field
-  issue_type evidence`).
+- `editions [--against PATH] [--ignore-fields F] [--include-fields F] [--learn [--scope S]] [--venues FILE]` —
+  checks each entry against its venue's schema (`entry_fields` in the library: the
+  per-paper fields the venue's official BibTeX has). `missing`: the entry lacks a field of
+  the schema (counts for `--strict`); the evidence names the schema and its `learned_from`.
+  A journal article with no `volume` isn't expected to have `volume`, `number`, `pages`.
+  For a venue without a schema it compares the venue's entries (the file and `--against`)
+  and only proposes one (3 or more entries of a journal or a conference year);
+  `--learn` writes the proposals and checks against them. Ignores the fields every entry has
+  (`title`, `author`, `year`, `booktitle`, `journal`), `citation`, exporter bookkeeping,
+  and library fields. Reports `edition_fields.txt` (`entry_id venue year field issue_type
+  evidence`) and `edition_schemas.txt` (`venue year level issue_type entries fields detail`;
+  level `journal`, `family`, `edition`; `schema_lacks`; the detail lists the entries that
+  lack a proposed field).
 - `official [--apply F1,F2|all] [--ids KEYS] [--local PATH] [--offline]
-  [--ignore-fields F] [--delay S] [--venues FILE]` — downloads each entry's official
+  [--ignore-fields F] [--delay S] [--refresh] [--learn [--scope S]] [--venues FILE]` — downloads each entry's official
   BibTeX again (like `add`) and compares field by field: `upstream_only` (official has
   it, entry lacks it), `differs`, `local_only` (entry has it, official lacks it; not
   `citation` or library fields), `type`. Titles aren't compared, braces/case/accents/month
@@ -98,13 +106,15 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   entries, and metadata entries. `--strict` counts `upstream_only`, `differs`, and `type`.
   Reports: `official_fields.txt` (`entry_id field issue_type bib official source`),
   `official_venues.txt` (`venue year field issue_type checked lacking detail`;
-  `entries_lack`, `library_lacks`,
-  `library_differs`), `official_unchecked.txt` (`entry_id status detail url next`; status
+  `entries_lack`, `library_lacks`, `library_differs`, and `schema_lacks` or
+  `schema_differs` with field `entry_fields`: the venue's schema versus the downloaded
+  BibTeX; `--learn` writes them into the library), `official_unchecked.txt` (`entry_id status detail url next`; status
   `no_bibtex`, `failed`, `mismatch`; `next` `by hand`, `retry`, `wait`, `check`).
 - `venues [PATH] [--venues FILE] [--journal-fields F] [--proceedings-fields F]` — audit
   the user and project venue libraries, each on its own (`--venues FILE`: only that file,
   a `missing_venues.yaml` works too), including fields one edition of a conference has and
-  another lacks.
+  another lacks, values every edition shares (move them into a family record), and the
+  family records with their editions and schemas.
 
 **`complete`** — add fields an entry lacks, **from the venue library only**; existing values
 never overwritten (conflicts reported). Dry-run default.
@@ -203,7 +213,7 @@ All in `.bibcc/<file>/` next to the input (`--log-dir DIR`: `DIR/<file>/`); logs
 
 | Command | Reports |
 |---------|---------|
-| `check` | `missing_fields.txt`, `title_case.txt`, `smart_protection.txt`, `citation_keys.txt`, `field_issues.txt`, `edition_fields.txt`, `official_fields.txt`, `official_venues.txt`, `official_unchecked.txt` |
+| `check` | `missing_fields.txt`, `title_case.txt`, `smart_protection.txt`, `citation_keys.txt`, `field_issues.txt`, `edition_fields.txt`, `edition_schemas.txt`, `official_fields.txt`, `official_venues.txt`, `official_unchecked.txt` |
 | `complete` | `complete.diff`, `missing_venues.yaml`, `missing_venues.txt`, `conflicts.txt`, `incomplete_entries.txt`, `venue_check.txt` (online) |
 | `add` | staging `.bib`, `add.txt`, `missing_venues.yaml` |
 | `upgrade` | `upgrade.txt`, `upgrade.diff`, `missing_venues.yaml`, `published.txt` (report-only, next to the first PATH) |
@@ -221,11 +231,18 @@ kind) means the venue has no month: a cross-month event or a non-monthly journal
 The previous edition's month is never copied. Proceedings records may
 carry `interim:` booktitles (sources `cvf` / `openreview`) linking the pre-proceedings name
 to the published one. Matching ignores braces/case/`\&`/extra spaces; journals also match by
-ISSN; proceedings by name+year or interim booktitle.
+ISSN; proceedings by name+year or interim booktitle. A third list, `families:` (`name`,
+`acronym`, `aliases`, `fields`, `entry_fields`, `learned_from`), describes a conference
+across its editions: its `fields` apply to every edition (the edition's value wins), and
+it may set where the official BibTeX comes from (`provider`, `interim`, `site`, and so
+on; bibcc ships the defaults). Any record may carry `entry_fields` (the venue's schema)
+and `learned_from`; only `check official --learn` and `check editions --learn` write them.
+`check missing` skips a field outside the schema.
 
 Add a venue: run `complete` (or `add`/`upgrade`) to generate
 `.bibcc/<in>/missing_venues.yaml`, fill the blanks (pre-filled from `# from bib`,
-`# from official BibTeX`, `# from <year> edition`, `# from CrossRef`, `# auto-guessed`), then
+`# from official BibTeX`, `# from <year> edition`, `# from CrossRef`, `# auto-guessed`;
+lines commented `# from family NAME` stay commented: the family supplies them), then
 `bibcc complete <in> --update-venues --scope project`. See `missing_venues.example.yaml` in
 the BibCC repo.
 
