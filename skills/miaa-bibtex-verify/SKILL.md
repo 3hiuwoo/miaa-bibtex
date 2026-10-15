@@ -60,8 +60,8 @@ skill runs the comparison and investigates the rows it owns.
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: the `official_unchecked.txt` rows with
-`mismatch`, and the `official_unchecked.txt` rows with `next` = `by hand` when you are
-auditing existing entries rather than acquiring new ones. The `check venues` log rows belong
+`mismatch`, and the `official_unchecked.txt` rows with `next` = `by hand` or `retry` when
+you are auditing existing entries rather than acquiring new ones. The `check venues` log rows belong
 to `miaa-bibtex-library`.
 
 ## The PDF-library gate

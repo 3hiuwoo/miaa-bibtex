@@ -18,15 +18,11 @@ path in the report.
 
 ## Find
 
-Climb the retrieval ladder in core, first for the official host of the same source as the
-BibTeX; when its retry budget is spent, climb it again for the **arXiv version**; then the
-human list. Unlike BibTeX, provenance does not matter for a PDF: the arXiv content is
-equivalent, so it is an accepted fallback for any paper, not only preprints. Open official
-hosts: CVF, PMLR, NeurIPS and ICLR proceedings, OpenReview, ACL Anthology, IJCAI, ECVA, AAAI
-OJS. IEEE Xplore, SpringerLink, ACM, and Elsevier may need the user's institutional access
-through rung 3. Per-source PDF locations: `$CORE/references/retrieval-playbook.md`. Harvest
-the PDF URL from the paper page, or from the `pdf` field some exports carry. Never unofficial
-mirrors.
+Climb the retrieval ladder in core for each source in the order of conventions section 7;
+when the retry budget of one source is spent, move to the next; then the human list. IEEE
+Xplore, SpringerLink, ACM, and Elsevier may need the user's institutional access through
+rung 3. Per-source PDF locations: `$CORE/references/retrieval-playbook.md`. Harvest the PDF
+URL from the paper page, or from the `pdf` field some exports carry.
 
 ## Save
 
@@ -51,6 +47,10 @@ bibcc librarian extra   bib/ <pdf folder>                # PDFs without an entry
 `--skip-empty` leaves out empty entries, whose BibTeX is still missing. The report goes next
 to the first path. Unresolved PDFs go in the run report's To do now list, one line each with
 the URL and the target `<folder>/<key>.pdf`.
+
+## Rows this skill owns
+
+From the master table in `miaa-bibtex-core`: the `missing_pdfs.txt` entries.
 
 ## Output
 

@@ -39,8 +39,7 @@ bibcc add --from .bibcc/work/<batch>/papers.csv --against bib/ --output added.bi
 bibcc upgrade added.bib --in-place   # interim CVF/OpenReview becomes proceedings BibTeX where already out
 ```
 
-Keep `add` at its default `--fallback none`. MIAA entries come from official BibTeX only, so
-never pass `--fallback missing` or `all`. The last lines of the run give the totals and group
+Keep `add` at its default `--fallback` (hard rule 1). The last lines of the run give the totals and group
 the papers left to do by what to do next. Then read `.bibcc/added.bib/add.txt`: one row per
 paper with a status and a `next` value.
 
@@ -61,25 +60,21 @@ By status:
   becomes `official`. For `failed` rows, `bibcc add --retry --output added.bib` tries every
   empty entry and failed paper again; run it after a pause, not in a loop. Move on when the
   totals show `0 empty`, or list what is left in the run report.
-- `duplicate`: already in the tree; report only.
-- `metadata`: must not occur under `--fallback none`. If one exists, it carries
-  `% BibCC: not the official BibTeX` and is **not done**: get the official BibTeX, or let
-  `upgrade` replace it.
+- `duplicate` and `metadata`: follow their rows in the master table.
 
 The unresolved rows, sorted by `next`, seed the run report's checklists.
 
 ## Mark interim entries
 
-Directly above every arXiv `@misc`, CVF, OpenReview, or early-access entry, and every empty
-entry, put `% TODO: switch to official bibtex`. An accepted-but-unpublished paper is keyed by
-the accepting venue now (`_CVPR2027` with `year = {2026}`), so its key will not change at
-upgrade time. The marker is the only comment an entry keeps; run notes go to WORK or the run
-report.
+Mark every interim, preprint, and empty entry as core requires (hard rule 5; conventions
+section 5), and key an accepted-but-unpublished paper by its accepting venue now (hard
+rule 4), so its key doesn't change at upgrade time.
 
 ## Rows this skill owns
 
-From the master table in `miaa-bibtex-core`: the `add.txt` rows with `next` = `by hand` or
-`retry`, the `official_unchecked.txt` rows with `next` = `by hand`, and the `add` log's
+From the master table in `miaa-bibtex-core`: the `add.txt` rows with `next` = `by hand`,
+`retry`, or `check`, and with status `interim`, `duplicate`, or `metadata`; the
+`official_unchecked.txt` rows with `next` = `by hand` or `retry`; and the `add` log's
 cross-month `month` note.
 
 ## Output

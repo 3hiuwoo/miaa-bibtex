@@ -24,9 +24,8 @@ bibcc complete bib/<file>.bib --online
 bibcc complete bib/<file>.bib --in-place --update-venues --scope project
 ```
 
-The month rules matter here: an event across two months, or a non-monthly journal, gets
-`month: none`, never a guess. The project library (`.bibcc-venues.yaml`, committed) learns
-the venue once for every coauthor. When a library record turns out wrong, fix the record,
+The project library (`.bibcc-venues.yaml`, committed) learns the venue once for every
+coauthor. When a library record turns out wrong, fix the record,
 then overwrite the entries that copied it:
 `bibcc complete bib/<file>.bib --in-place --resolve library --fields F1,F2`. Filling the YAML
 blanks and fixing records is the boundary with `miaa-bibtex-library`: when the work is driven
@@ -48,27 +47,26 @@ For AAAI, ACM, and Elsevier, bibcc cannot download: fetch the official BibTeX by
 into `WORK/exports/<key>.bib` (with the `% source: <URL>` line) and compare with
 `--local .bibcc/work/<batch>/exports/ --offline`. Only for a field no export has, read it off
 the official paper page of the same source as the BibTeX and patch the entry by hand, keeping
-every official value as exported. `url` is never patched: if the official export has none,
-the entry has none.
+every official value as exported. For `url`, follow conventions section 2.
 
 ## Interim leftovers
 
-Fields that only the interim or preprint version has belong to that version. Upgrade drops
-them; remove any that remain:
+Interim leftovers are defined in conventions section 2. Upgrade drops them; remove any that
+remain:
 
 ```bash
 bibcc check fields bib/<file>.bib --apply
 ```
 
-Never copy them back from the input list, the old entry, or WORK, and never use the CVF page
-as a `url` for IEEE Xplore BibTeX. `check fields` also reports AAAI-style `@article` entries
-as `conference_article`; `bibcc complete FILE --in-place` retypes them.
+`check fields` also reports AAAI-style `@article` entries as `conference_article`;
+`bibcc complete FILE --in-place` retypes them.
 
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: `official_fields.txt` (`upstream_only`,
-`differs`, `local_only`), `edition_fields.txt` (`missing`),
-`conflicts.txt`, and `field_issues.txt`. The `official_venues.txt` rows, the
+`differs`, `local_only`, `type`), `official_venues.txt` (`entries_lack`),
+`edition_fields.txt` (`missing`), `conflicts.txt`, and `field_issues.txt`. The other
+`official_venues.txt` rows, the
 `edition_schemas.txt` proposals, and the `missing_venues.yaml` blanks belong to
 `miaa-bibtex-library`.
 

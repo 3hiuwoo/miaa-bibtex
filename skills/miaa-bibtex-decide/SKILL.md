@@ -19,23 +19,21 @@ quotation, or only decide keys. Default to all four concerns when nothing is nar
 
 ## Citation key
 
-`Method_FirstAuthorSurname_VenueYear`. Read the title and abstract, the PDF if ambiguous, for
-METHOD: the paper's own name for its method or system, casing kept, else the first two content
-words. Year is the edition year. `add` builds the key from the manifest and guesses the rest;
-confirm or rename it.
+Set each key by conventions section 1. `add` builds the key from the manifest and guesses
+the rest; confirm or rename it.
 
 ```bash
 bibcc check keys bib/<file>.bib
 ```
 
-`check keys` validates the format and the author surname; it does not rename. **Keys are
-final after this step**; PDFs are named by them.
+`check keys` validates the format and the author surname; it does not rename. Keys are final
+after this step (hard rule 4).
 
 ## Title case and protection
 
-APA Title Case. Decide which terms get braces, one pair per term (`{CLIP}`, `{ImageNet}`,
-`{CODA-Prompt}: ...`), never the whole title. To brace the vocabulary wherever it appears
-with the same case, then see what else bibcc suggests:
+Decide the title case and which terms get braces by conventions section 4 (hard rule 6). To
+brace the vocabulary wherever it appears with the same case, then see what else bibcc
+suggests:
 
 ```bash
 bibcc check quote bib/<file>.bib --apply
@@ -52,9 +50,9 @@ without braces in the project terms file, then rerun the `--apply` command:
 bibcc terms add CIP-Net --scope project   # commit .bibcc-terms.txt
 ```
 
-Otherwise the split is right and `--apply` makes it. Never re-brace compounds by hand, and
-never edit a terms file by hand. Terms worth having lab-wide go upstream into BibCC's
-`examples/terms/miaa.txt` by pull request.
+Otherwise the split is right and `--apply` makes it (the `Over-Braced` row of the master
+table). Terms worth having lab-wide go upstream into BibCC's `examples/terms/miaa.txt` by
+pull request.
 
 ## Taxonomy
 

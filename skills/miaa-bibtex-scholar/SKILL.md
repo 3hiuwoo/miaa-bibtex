@@ -16,8 +16,8 @@ Load `miaa-bibtex-core` first. Two small aims, both optional and on demand.
 bibcc scholar cite bib/<file>.bib -i
 ```
 
-The human types each Google Scholar count into a `citation` field, kept last. Add counts only
-when the user asks; `citation` is present only when counts were demanded.
+The human types each Google Scholar count into a `citation` field. Where it goes and when to
+add it: `$CORE/references/miaa-conventions.md` sections 2 and 3.
 
 ## Verify titles
 

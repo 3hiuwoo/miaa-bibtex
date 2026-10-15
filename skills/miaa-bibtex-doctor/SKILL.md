@@ -8,8 +8,10 @@ metadata:
 
 # Doctor: keep the set in sync with bibcc
 
+Load `miaa-bibtex-core` first: it sets `$CORE` and holds the master table this skill checks.
 One aim: keep the miaa-bibtex skill set true to the installed bibcc and internally
-consistent. This is the only place the bibcc version pin lives.
+consistent. The version gate is defined in core's preflight; this skill checks that it still
+holds.
 
 ## Read the installed surface
 
@@ -48,8 +50,9 @@ used across the set. Flag every difference:
 
 - Every skill directory name equals its `name:` frontmatter.
 - Every stage skill and composer loads `miaa-bibtex-core` and names no rule of its own.
-- No skill names a bibcc option inline outside `miaa-bibtex-core` and
-  `references/bibcc-workflow.md`.
+- No skill explains a bibcc option outside `miaa-bibtex-core` and
+  `references/bibcc-workflow.md`. Stage skills name the options of the commands they run,
+  and the sheet says what each option does.
 - Every report file and status word in the set appears in the master report-to-action table
   in core, and every row there names an owning skill.
 

@@ -18,13 +18,14 @@ on the library itself is here. The schema and the month rules are in
 ```bash
 bibcc venues where                  # which libraries apply, their sizes, what the project overrides
 bibcc venues init --scope project   # empty project library (./.bibcc-venues.yaml)
-bibcc venues import miaa --scope project   # seed from the lab's shared library, once, then commit
+bibcc venues import miaa --scope project   # only if preflight's config profile didn't seed it
 bibcc venues import .bibcc-venues.yaml --dry-run   # preview merging a project library into the user library
 bibcc venues examples               # list the shared libraries in BibCC's examples/venues/
 ```
 
-The project library (`.bibcc-venues.yaml`, committed) pools records through git for every
-coauthor. The user library is personal and cross-survey.
+Preflight's `bibcc config profile miaa --scope project` normally seeds the project library,
+together with the survey's config and terms file. The project library (`.bibcc-venues.yaml`, committed)
+pools records through git for every coauthor. The user library is personal and cross-survey.
 
 ## Audit and fill
 
@@ -38,9 +39,8 @@ bibcc check editions bib/<file>.bib --against bib/   # schemas proposed for venu
 
 Fill the blanks in `.bibcc/<file>/missing_venues.yaml` from the official conference or journal
 page. ISBN and ISSN, month, and location are on the proceedings front matter or the venue's
-site. Month rules: one month means that month; an event across two months, or a non-monthly
-journal, gets `none`; a journal record leaves month blank because each issue has its own.
-Never copy the previous edition's month. Then apply:
+site. Month rules: `$CORE/references/miaa-conventions.md` section 2, and the blank-`month` row
+of the master table. Then apply:
 
 ```bash
 bibcc complete bib/<file>.bib --in-place --update-venues --scope project
@@ -68,13 +68,14 @@ master table in `miaa-bibtex-core`.
 To reuse a survey's venues elsewhere, merge its project library into the user library once the
 user agrees (it only adds; differing values are kept and reported):
 `bibcc venues import .bibcc-venues.yaml`, then without `--dry-run`. Venues worth having
-lab-wide go upstream into BibCC's `examples/venues/miaa.yaml` by pull request.
+lab-wide go upstream into BibCC's `examples/venues/miaa.yaml` by pull request, and lab-wide
+layout settings into `examples/config/miaa.yaml`.
 
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: `official_venues.txt` (`library_lacks`,
 `library_differs`, `schema_lacks`, `schema_differs`), `edition_schemas.txt`
-(`schema_lacks`), the `check venues` cross-edition gaps and shared values, and the
+(`schema_lacks`, `schema_differs`), the `check venues` cross-edition gaps and shared values, and the
 `missing_venues.yaml` blank values and blank `month`.
 
 ## Output

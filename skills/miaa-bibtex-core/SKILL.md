@@ -83,8 +83,9 @@ continue.
 
 The `bibcc check quote -h | grep -q -- --scope` check is the version gate: an install
 without it is older than 0.8.0 and lacks the protected-terms files (`bibcc terms`, read by
-`check quote`), the lab-profile import (`bibcc config profile`), `check venues --apply`, venue schemas (`check official --learn`), family
-records, and `bibcc surface`. If the check still fails after a forced reinstall, stop and
+`check quote`, and `check quote --interactive --scope`), the config files and lab-profile
+import (`bibcc config`, `bibcc config profile`), `check venues --apply`, and
+`bibcc venues providers`. If the check still fails after a forced reinstall, stop and
 tell the user this set needs BibCC 0.8.0 or later. Any version that passes works, including a
 maintainer's editable `dev` checkout.
 
@@ -160,32 +161,48 @@ instructions. Do not keep looping.
 
 Each row is something bibcc found but cannot finish. Act only on rows whose **Owner** is the
 skill you are running. The rows carry the report file, the row marker, and the agent action.
+Rows of `add.txt`, `upgrade.txt`, and `published.txt` match by their `next` value, so the
+statuses `official`, `empty`, `failed`, `published`, and `official BibTeX available` have no
+rows of their own: an `official` row with an empty `next` is done.
 
 | Report | Row | Owner | Agent action |
 |---|---|---|---|
 | `add.txt`, `upgrade.txt`, `published.txt` | `next` = `by hand` | acquire, upgrade | Ladder rungs 2 to 4 with the row's URL; save to `WORK/exports/<key>.bib`; `bibcc add WORK/exports/` |
 | `add.txt`, `upgrade.txt`, `published.txt` | `next` = `retry` | acquire, upgrade | Run the same command again after a pause with a larger `--delay`; then the ladder |
 | `add.txt`, `upgrade.txt`, `published.txt` | `next` = `wait` | upgrade | Nothing now: the entry is interim; `upgrade` later |
+| `add.txt`, `upgrade.txt`, `published.txt` | `next` = `check` | acquire, upgrade | Not found, or the manifest key is taken: fix the identifier in the manifest (or the entry's DOI or title), then run the command again |
+| `upgrade.txt`, `published.txt` | `next` = `upgrade` | upgrade | `bibcc upgrade FILE --in-place`, then remove the marker (conventions section 5) |
+| `add.txt` | status `interim` | acquire | Mark it (hard rule 5); `upgrade` picks it up later |
+| `add.txt` | status `duplicate` | acquire | Already in the tree: report only |
+| `add.txt` | status `metadata` | acquire, upgrade | Not done (hard rule 1): get the official BibTeX by the ladder, or let `upgrade` replace it |
 | `official_unchecked.txt` | `next` = `by hand` (AAAI, ACM, Elsevier) | acquire, verify | Fetch the official BibTeX by the ladder into `WORK/exports/<key>.bib`; `bibcc check official FILE --local WORK/exports/ --offline` |
 | `official_unchecked.txt` | `mismatch` | verify | The entry's DOI or title points at another paper: open the URL, fix the entry's `doi` or identity, check again |
+| `official_unchecked.txt` | `next` = `retry` | acquire, upgrade, verify | The lookup failed: run `check official` again after a pause with a larger `--delay`; then the ladder |
 | `official_unchecked.txt` | `next` = `wait` | upgrade | Nothing now: the entry is interim; `upgrade` later |
 | `official_fields.txt` | `upstream_only` | complete | `bibcc check official FILE --apply F1,F2`, or `all`; never by hand |
 | `official_fields.txt` | `differs` | complete | The official value wins (precedence 1); edit the entry by hand, unless the difference is a MIAA layer (key, title braces) |
 | `official_fields.txt` | `local_only` | complete | Keep `venue`, `citation`, and library fields; remove interim leftovers with `check fields --apply`; for others, check the official page, then keep or remove |
+| `official_fields.txt` | `type` | complete | The official entry type wins (precedence 1): re-import the official BibTeX (`bibcc add`, or `upgrade`) or change the type by hand, then `check official` again. AAAI's `@article` is the exception (hard rule 8) |
+| `official_venues.txt` | `entries_lack` | complete | Entries of the venue lack a field its official BibTeX has: `bibcc check official FILE --apply F` |
 | `official_venues.txt` | `library_lacks`, `library_differs` | library | Fix the venue library record, then `complete --in-place --resolve library --fields F` |
 | `official_venues.txt` | `schema_lacks` | library | `bibcc check official FILE --learn --scope project`; never write `entry_fields` by hand |
 | `official_venues.txt` | `schema_differs` | library | Confirm on the official page that the venue changed its export (a new year), then `check official FILE --learn --scope project`; if not, the downloaded BibTeX is odd: leave the schema |
 | `edition_schemas.txt` | `schema_lacks` | library | Proposed from entries alone (AAAI, ACM, Elsevier venues). Fetch one paper's official BibTeX by the ladder into `WORK/exports/` and `check official FILE --local WORK/exports/ --offline --learn --scope project`; only when no export is reachable, `check editions FILE --against bib/ --learn --scope project` |
+| `edition_schemas.txt` | `schema_differs` | library | The entries disagree with the library's schema: confirm against one paper's official BibTeX (by the ladder into `WORK/exports/`, then `check official FILE --local WORK/exports/ --offline --learn --scope project`); never rewrite `entry_fields` by hand |
 | `edition_fields.txt` | `missing` | complete | `check official FILE --apply F` for that entry; if no export has it, read it off the official page |
 | `check venues` log | cross-edition gaps | library | Fill the record from the official page of that edition |
 | `check venues` log | `Fields that every edition shares` | library | `bibcc check venues --scope project --apply` moves them into the family record; never by hand. `check venues` again |
 | `add`, `upgrade` log | `month: the official BibTeX gives '...', a period across two months` | acquire, upgrade | Nothing to fix: the entry correctly has no month. Name the entry under Status in the run report |
 | `conflicts.txt` (`complete`) | `month` with library = `none` | complete | Unless the month came from the official BibTeX (then the record is wrong: fix it), `complete --in-place --resolve library --fields month` removes it |
+| `conflicts.txt` (`complete`) | other rows | complete | A value from the official BibTeX wins (precedence 1): when the record is wrong, hand it to library. Otherwise the library is right: `complete --in-place --resolve library --fields F` |
 | `missing_venues.yaml` | blank values | library | Read the official proceedings or journal page; fill in; `complete --update-venues --scope project` |
 | `missing_venues.yaml` | blank `month` | library | Official dates page: one month means that month; across two months means `none`. Journal record: leave blank (each issue has its own month); non-monthly journal means `none` |
 | `field_issues.txt` | `conference_article` | complete | `bibcc complete FILE --in-place` retypes it to `@inproceedings`; never by hand |
+| `field_issues.txt` | interim and empty fields | complete | `bibcc check fields FILE --apply` removes them; never copy them back |
+| `field_issues.txt` | other rows (typos, bad values, duplicates) | complete | Fix the field name or value from the official BibTeX by hand; for a duplicate, keep the entry with the official BibTeX and the final key, and remove the other |
+| `missing_pdfs.txt` (`librarian`) | each entry | pdfs | Fetch the PDF by the ladder (conventions section 7) and save it as `<key>.pdf` |
 | `title_case.txt` | suggestions | decide | Judge each one |
-| `smart_protection.txt` | `Over-Braced: use ...` | decide | A method name stays whole: `bibcc terms add NAME --scope project` (without braces), then rerun `check quote --apply`. Otherwise the split is right and `--apply` makes it |
+| `smart_protection.txt` | `Over-Braced: use ...` | decide | A method name stays whole: `bibcc terms add NAME --scope project` (without braces), then rerun `check quote --apply`. Otherwise the split is right and `--apply` makes it. Never re-brace a compound or edit a terms file by hand |
 | `smart_protection.txt` | other rows | decide | Judge each one |
 
 ## Run report (always, at the end)

@@ -20,9 +20,9 @@ else, and resolve the batch into `WORK/papers.csv` if the caller has not already
 | 4 | `miaa-bibtex-decide` | Keys, title case, braces, taxonomy | Keys are final, titles and braces decided, entries placed |
 | 5 | Write the run report | Core format | The report is shown to the user |
 
-Order matters: keys become final in step 4, before any PDF is named. Structure is settled
+Order matters: keys become final in step 4 (hard rule 4). Structure is settled
 (step 3) before content, so `decide` sets keys and titles on a clean tree. `miaa-bibtex-pdfs` and
-`miaa-bibtex-scholar` are side flows the user runs after; PDFs need final keys. Handover
+`miaa-bibtex-scholar` are side flows the user runs after. Handover
 points, from the master table in core, are the rows each stage cannot finish; they seed the
 run report's checklists.
 

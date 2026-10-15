@@ -21,8 +21,9 @@ library or the official paper page (never overwrite official ones) → these con
   ECCV 2024 papers are `_ECCV2024` with `year = {2025}`; an accepted preprint is keyed by
   the accepting venue (`_AAAI2026` with `year = {2025}`).
 - Preprints with no accepted venue: `_arXiv<year>`.
-- **Finality**: the key is fixed at Flow A step A4, before any PDF is named. Changing a
-  key afterwards means renaming its PDF and every `\cite` in the same change.
+- **Finality**: the key is fixed in `miaa-bibtex-decide` (step 4 of `miaa-bibtex-curate`),
+  before any PDF is named. Changing a key afterwards means renaming its PDF and every
+  `\cite` in the same change.
 - Examples: `CPP_Li_WACV2024`, `L2P_Wang_CVPR2022`, `RCS-Prompt_Yang_ECCV2024`,
   `EWC_Kirkpatrick_PNAS2017`, `PASS++_Zhu_TPAMI2025`, `CLTypes_vandeVen_arXiv2018`.
 
@@ -64,7 +65,8 @@ library or the official paper page (never overwrite official ones) → these con
   location, address, series, editor) are entered once, through the missing-venues YAML,
   into the survey's project library (`.bibcc-venues.yaml`, committed; `--scope project`)
   and applied by `bibcc complete`; venues of lab-wide value go upstream into the shared
-  `miaa` library in BibCC's `examples/venues/`. *Entry-specific* fields (pages,
+  `miaa` library in BibCC's `examples/venues/` (lab-wide layout settings into
+  `examples/config/miaa.yaml`). *Entry-specific* fields (pages,
   volume, number, doi, url, articleno) come from the official export or, failing that, the
   official paper page of the same source as the BibTeX, patched directly into the
   entry. `url` only as exported: none when the official export has none.

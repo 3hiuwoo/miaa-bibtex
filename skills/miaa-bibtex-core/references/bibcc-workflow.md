@@ -21,8 +21,16 @@ only; differing values are kept and reported): `bibcc venues import .bibcc-venue
 
 Protected terms live in the same two scopes: the **user terms file**
 (`~/.config/bibcc/terms.txt`, or `$BIBCC_TERMS`) and the survey's **project terms file**
-(`.bibcc-terms.txt`, the nearest one above the `.bib` file). `check quote` reads both. The
-profile seeds the project file; `bibcc terms add NAME --scope project` adds one term.
+(`.bibcc-terms.txt`, the nearest one above the `.bib` file). `check quote` reads both, and
+still reads `.bibcc/<file>/vocab.txt`, where releases before 0.8.0 saved the compounds
+kept whole.
+The profile seeds the project file; `bibcc terms add NAME --scope project` adds one term.
+
+The config holds the `format` settings in the same two scopes: the **user config**
+(`~/.config/bibcc/config.yaml`, or `$BIBCC_CONFIG`) and the survey's **project config**
+(`.bibcc.yaml`, the nearest one above the `.bib` file; its values win, and a command-line
+option wins over both). The profile seeds the project config, so `bibcc format` gives every
+coauthor the lab layout without options.
 
 Reports about `FILE.bib` go to `.bibcc/FILE.bib/` next to it; logs to
 `.bibcc/FILE.bib/logs/`. A file that is itself inside `.bibcc/` gets `reports/FILE.bib/`
@@ -39,9 +47,10 @@ column of `add.txt`, `upgrade.txt`, `published.txt`, and `official_unchecked.txt
 the papers left to do. bibcc does every step it can; the agent does only what a report
 hands over, and a missing batch feature belongs in bibcc, not in a workaround.
 
-Env: `BIBCC_VENUES` (user venue library path), `BIBCC_TERMS` (user terms file path), `S2_API_KEY` (higher Semantic Scholar limits),
-`BIBCC_CACHE` (downloaded official BibTeX, kept 30 days; default `~/.cache/bibcc`; `off`
-turns it off).
+Env: `BIBCC_CONFIG`, `BIBCC_VENUES`, `BIBCC_TERMS` (user config, venue library, and terms
+file paths; normally unset, so the defaults in `~/.config/bibcc/` apply), `S2_API_KEY`
+(higher Semantic Scholar limits), `BIBCC_CACHE` (downloaded official BibTeX, kept 30 days;
+default `~/.cache/bibcc`; `off` turns it off).
 
 ## Map to the SOP steps
 
@@ -99,8 +108,9 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   (`title`, `author`, `year`, `booktitle`, `journal`), `citation`, exporter bookkeeping,
   and library fields. Reports `edition_fields.txt` (`entry_id venue year field issue_type
   evidence`) and `edition_schemas.txt` (`venue year level issue_type entries fields detail`;
-  level `journal`, `family`, `edition`; `schema_lacks`; the detail lists the entries that
-  lack a proposed field).
+  level `journal`, `family`, `edition`; `schema_lacks`, or `schema_differs` when the
+  library already holds a different schema for that venue; the detail lists the entries
+  that lack a proposed field).
 - `official [--apply F1,F2|all] [--ids KEYS] [--local PATH] [--offline]
   [--ignore-fields F] [--delay S] [--refresh] [--learn [--scope S]] [--venues FILE]` — downloads each entry's official
   BibTeX again (like `add`) and compares field by field: `upstream_only` (official has
@@ -127,7 +137,8 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
 
 **`complete`** — add fields an entry lacks, **from the venue library only**; existing values
 never overwritten (conflicts reported). Dry-run default.
-- `--output FILE` / `--in-place` (mutually exclusive) / `--log-dir` / `--venues`.
+- `--output FILE` / `--in-place` (mutually exclusive) / `--log-dir` / `--venues` /
+  `--delay S` (with `--online`: seconds between CrossRef requests).
 - `--update-venues` — merge the filled `.bibcc/<in>/missing_venues.yaml` into one library
   first: the user library, or with `--scope project` the project's `.bibcc-venues.yaml`
   (which must exist). The log names the file written. `--venues FILE` reads and writes
@@ -183,15 +194,20 @@ metadata) with the published official BibTeX.
 - `--report-only PATH …` — list now-published candidates + source URL, downloads nothing.
 - Keeps the key, keeps a matching hand-made title, keeps custom fields, drops preprint
   fields. Non-downloadable published versions are kept with a manual URL.
-- `upgrade.txt` (`entry_id status detail next`) and `published.txt` (`file entry_id status
-  venue source url next`) end with the same `next` column: `upgrade` (replace now with
-  `upgrade --in-place`), `by hand`, `wait`, `retry`, or `check`.
+- `upgrade.txt` (`entry_id status detail next`; status `upgraded`, `unchanged`, `failed`)
+  and `published.txt` (`file entry_id status venue source url next`; status `published`,
+  `interim`, `official BibTeX available`) end with the same `next` column: `upgrade`
+  (replace now with `upgrade --in-place`), `by hand`, `wait`, `retry`, or `check`.
 
 **`format`** — rewrite layout of whole files. `PATH …` (recursive; `.bibcc/` skipped).
 - `--in-place` / `-o/--output` (single file) / `--check` (exit 1 if unformatted).
-- `--sort-fields` + `--field-order`, `--sort-entries`, `--keep-quotes`, `--keep-months`,
-  `--keep-pages`, `--no-align`, `--indent N|tab`, `--blank-lines N`, `--trailing-comma`,
-  `--drop-empty`.
+- `--sort-fields` + `--field-order` (comma-separated; `*` marks where unlisted fields go),
+  `--sort-entries`, `--keep-quotes`, `--keep-outer-braces`, `--keep-months`, `--keep-pages`,
+  `--align`, `--indent N|tab`, `--blank-lines N`, `--trailing-comma`, `--drop-empty`,
+  `--log-dir`. Each yes-or-no option has a `--no-` form that turns off a config value.
+- Settings come from the `format:` section of the user and project configs (`.bibcc.yaml`);
+  `--config FILE` reads only that file, `--no-config` none. In a MIAA survey the profile's
+  `.bibcc.yaml` sets the lab layout, so run `format` without style options.
 
 **`librarian`** — PDF library vs `.bib`; it never downloads PDFs. Subcommands
 `missing BIB… LIBRARY [--skip-empty]` and `extra BIB… LIBRARY`: any number of `.bib`
@@ -201,7 +217,7 @@ missing, 2 when a path does not exist; `--skip-empty` leaves out empty entries. 
 next to the first BIB. `rename BIB PDF_FOLDER [--dry-run]` (title → `<key>.pdf`; the
 title is the text after the last ` - ` in the filename, i.e. reference-manager exports).
 
-**`scholar`** — `cite BIB [-i|--open] [--include-filled] [--batch-size N] [-o FILE]`
+**`scholar`** — `cite BIB [-i|--open] [--include-filled] [--batch-size N] [-o FILE] [--log-dir DIR]`
 (builds Scholar URLs; interactive fill of `citation`); `titles BIB [--delay] [--quiet]
 [--retry-errors REPORT] [--ids]` (verify titles vs CrossRef/arXiv/Semantic Scholar).
 
@@ -213,14 +229,27 @@ fields the project overrides, which one is written); `init [--scope user|project
 (empty library; project = `./.bibcc-venues.yaml`); `import SOURCE [--scope user|project |
 --venues FILE] [--overwrite] [--dry-run]` (SOURCE = file, URL, or shared name like `miaa`;
 only adds, keeps your values where they differ unless `--overwrite`); `examples` (list
-the shared libraries in BibCC's `examples/venues/`); `providers [PATH] [--format json]`
-(where each conference's official BibTeX comes from, and whether the row is built in or
-set by a family record).
+the shared libraries in BibCC's `examples/venues/`); `providers [PATH] [--venues FILE]
+[--format text|json]` (where each conference's official BibTeX comes from, and whether the
+row is built in or set by a family record).
 
-**`terms`** — manage the protected-terms files. `where [PATH]`; `list`; `add TERM…
-[--scope user|project | --file FILE]` (adds the terms the file lacks, ignoring case);
-`import SOURCE [--scope …] [--dry-run]` (SOURCE = file, URL, or shared name like `miaa`);
+**`terms`** — manage the protected-terms files. `where [PATH]`; `list [PATH]`; `add TERM…
+[--scope user|project | --terms FILE]` (adds the terms the file lacks, ignoring case);
+`import SOURCE [--scope user|project | --terms FILE] [--dry-run]` (SOURCE = file, URL, or shared name like `miaa`);
 `examples` (the shared lists in BibCC's `examples/terms/`).
+
+**`config`** — manage the config files. `where [PATH]` (every file that applies: configs,
+venue libraries, terms files, the provider table, and each setting with where it comes
+from); `init [--scope user|project]` (a config listing every setting, commented out);
+`import SOURCE [--scope user|project | --config FILE] [--overwrite] [--dry-run]` (adds the
+settings the file lacks, keeps your values where they differ unless `--overwrite`, and
+changes only those lines, so comments stay); `profile NAME [--scope user|project]
+[--overwrite] [--dry-run]` (`config import`, `venues import`, and `terms import` of one
+shared name, such as `miaa`); `examples` (the shared configs in BibCC's `examples/config/`).
+
+**`surface [--format json|text]`** — the machine-readable command surface: commands,
+options, report files, and status, `next`, and `issue_type` words. `miaa-bibtex-doctor`
+reads it to find drift.
 
 ## Output files
 

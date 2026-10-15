@@ -35,8 +35,10 @@ version is kept with a manual URL; hand it over.
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: the `upgrade.txt` and `published.txt` rows with
-`next` = `by hand`, `retry`, or `wait`, and the `official_unchecked.txt` rows with
-`next` = `wait`. Fetch `by hand` items by the ladder into `WORK/exports/` and re-run.
+`next` = `upgrade`, `by hand`, `retry`, `wait`, or `check`; the `add.txt` rows with
+`next` = `wait` and status `metadata`; and the `official_unchecked.txt` rows with
+`next` = `wait` or `retry`. Fetch `by hand` items by the ladder into `WORK/exports/` and
+re-run.
 
 ## Output
 
