@@ -10,17 +10,19 @@ full options; it is the authority when it disagrees with this sheet.
 
 bibcc ships no venue library. It reads the **user library** (`~/.config/bibcc/venues.yaml`,
 or `$BIBCC_VENUES`) merged with the survey's **project library** (`.bibcc-venues.yaml`, the
-nearest one above the `.bib` file; its values win). For a survey, seed the project library
-once with `bibcc venues import miaa --scope project` at the repo root and commit it, so
-coauthors pool venue records through git. `bibcc venues where` shows what applies. To
+nearest one above the `.bib` file; its values win). For a survey, seed the project files
+once with `bibcc config profile miaa --scope project` at the repo root (the lab's config,
+venue library, and terms file; it adds only what is missing) and commit them, so coauthors
+pool venue records and terms through git. `bibcc config where` shows every file that
+applies; `bibcc venues where` shows only the libraries. To
 reuse a survey's venues elsewhere, merge its project library into the user library (adds
 only; differing values are kept and reported): `bibcc venues import .bibcc-venues.yaml
 [--dry-run]` (default `--scope user`).
 
 Protected terms live in the same two scopes: the **user terms file**
 (`~/.config/bibcc/terms.txt`, or `$BIBCC_TERMS`) and the survey's **project terms file**
-(`.bibcc-terms.txt`, the nearest one above the `.bib` file). `check quote` reads both. Seed
-the project file once with `bibcc terms import miaa --scope project` and commit it.
+(`.bibcc-terms.txt`, the nearest one above the `.bib` file). `check quote` reads both. The
+profile seeds the project file; `bibcc terms add NAME --scope project` adds one term.
 
 Reports about `FILE.bib` go to `.bibcc/FILE.bib/` next to it; logs to
 `.bibcc/FILE.bib/logs/`. A file that is itself inside `.bibcc/` gets `reports/FILE.bib/`

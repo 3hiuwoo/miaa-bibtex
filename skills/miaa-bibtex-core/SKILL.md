@@ -76,15 +76,14 @@ continue.
 |---|---|---|---|
 | `uv` (Python 3.10 or later) | Installing and running bibcc | `command -v uv` | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | `bibcc` | Every deterministic step | `command -v bibcc`, then `bibcc check quote -h \| grep -q -- --scope` | `uv tool install git+https://github.com/3hiuwoo/BibCC` (no tag: `main` holds only releases). Too old: the same command with `--force` |
-| venue library | `complete` | `bibcc venues where` in the survey repo | bibcc ships none. Seed the survey's project library once: `bibcc venues import miaa --scope project` at the repo root, then commit `.bibcc-venues.yaml` |
-| protected terms | `check quote` | `bibcc terms where` in the survey repo | Seed the survey's project terms file once: `bibcc terms import miaa --scope project` at the repo root, then commit `.bibcc-terms.txt` |
+| lab profile: config, venue library, protected terms | `format`, `complete`, `check quote` | `bibcc config where` in the survey repo (lists the config, venue libraries, and terms files that apply) | bibcc ships none. Seed the survey once: `bibcc config profile miaa --scope project` at the repo root, then commit `.bibcc.yaml`, `.bibcc-venues.yaml`, and `.bibcc-terms.txt` |
 | web fetch and search | Retrieval rung 2 | The harness's fetch or search tools exist | none; use what is there |
 | rung-3 browser | Login-gated and bot-blocked sites | `command -v agent-browser`, or a connected browser MCP | lab standard agent-browser, below |
 | optional | Large title batches, tidy repo | `S2_API_KEY` set; `.bibcc/` in `.gitignore` | mention only |
 
 The `bibcc check quote -h | grep -q -- --scope` check is the version gate: an install
 without it is older than 0.8.0 and lacks the protected-terms files (`bibcc terms`, read by
-`check quote`), `check venues --apply`, venue schemas (`check official --learn`), family
+`check quote`), the lab-profile import (`bibcc config profile`), `check venues --apply`, venue schemas (`check official --learn`), family
 records, and `bibcc surface`. If the check still fails after a forced reinstall, stop and
 tell the user this set needs BibCC 0.8.0 or later. Any version that passes works, including a
 maintainer's editable `dev` checkout.
@@ -105,9 +104,8 @@ command -v bibcc >/dev/null || uv tool install git+https://github.com/3hiuwoo/Bi
 bibcc check quote -h | grep -q -- --scope ||                        # older than 0.8.0:
   uv tool install --force git+https://github.com/3hiuwoo/BibCC        #   move to the latest release
 bibcc check quote -h | grep -q -- --scope || echo 'needs BibCC 0.8.0 or later: stop here'
-bibcc --version && bibcc venues where && bibcc terms where          # record the version in the run report
-[ -f .bibcc-venues.yaml ] || bibcc venues import miaa --scope project   # survey repo root; commit the file
-[ -f .bibcc-terms.txt ] || bibcc terms import miaa --scope project      # survey repo root; commit the file
+bibcc --version && bibcc config where                               # record the version and files in the run report
+bibcc config profile miaa --scope project   # survey repo root; adds only what is missing; commit the three files
 grep -qs '^\.bibcc/' .gitignore || echo '.bibcc/' >> .gitignore    # in the survey repo
 # rung-3 browser, lab standard:
 brew install agent-browser 2>/dev/null || npm install -g agent-browser
