@@ -64,8 +64,8 @@ bibcc check fields bib/<file>.bib --apply
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: `official_fields.txt` (`upstream_only`,
-`differs`, `local_only`, `type`), `official_venues.txt` (`entries_lack`),
-`edition_fields.txt` (`missing`), `conflicts.txt`, and `field_issues.txt`. The other
+`differs`, `local_only`, `type`), `official_venues.txt` (`entries_lack`, `export_lacks`),
+`edition_fields.txt` (`missing`, `default_missing`), `conflicts.txt`, and `field_issues.txt`. The other
 `official_venues.txt` rows, the
 `edition_schemas.txt` proposals, and the `missing_venues.yaml` blanks belong to
 `miaa-bibtex-library`.

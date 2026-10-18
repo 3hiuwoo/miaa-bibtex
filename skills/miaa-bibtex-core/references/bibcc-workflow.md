@@ -101,10 +101,15 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   checks each entry against its venue's schema (`entry_fields` in the library: the
   per-paper fields the venue's official BibTeX has). `missing`: the entry lacks a field of
   the schema (counts for `--strict`); the evidence names the schema and its `learned_from`.
+  `default_missing`: the venue has no schema, and the entry lacks a field of its
+  publisher's default schema (what most of the library's schemas of the same publisher
+  and kind share): a guess, never written by `--learn`, not counted by `--strict`.
   A journal article with no `volume` isn't expected to have `volume`, `number`, `pages`.
   For a venue without a schema it compares the venue's entries (the file and `--against`)
   and only proposes one (3 or more entries of a journal or a conference year);
-  `--learn` writes the proposals and checks against them. Ignores the fields every entry has
+  `--learn` writes the proposals and checks against them; a proposal for a journal or an
+  edition that the library has no record of goes into `.bibcc/<in>/missing_venues.yaml`,
+  with the record. Ignores the fields every entry has
   (`title`, `author`, `year`, `booktitle`, `journal`), `citation`, exporter bookkeeping,
   and library fields. Reports `edition_fields.txt` (`entry_id venue year field issue_type
   evidence`) and `edition_schemas.txt` (`venue year level issue_type entries fields detail`;
@@ -123,9 +128,14 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   entries, and metadata entries. `--strict` counts `upstream_only`, `differs`, and `type`.
   Reports: `official_fields.txt` (`entry_id field issue_type bib official source`),
   `official_venues.txt` (`venue year field issue_type checked lacking detail`;
-  `entries_lack`, `library_lacks`, `library_differs`, and `schema_lacks` or
+  `entries_lack`, `export_lacks` (every checked entry has a field no official BibTeX has),
+  `library_lacks`, `library_differs`, `books_lack` (the entries of one book of a
+  proceedings agree on a `volume` or `part` the record's `books:` table lacks), and
+  `schema_lacks` or
   `schema_differs` with field `entry_fields`: the venue's schema versus the downloaded
-  BibTeX; `--learn` writes them into the library), `official_unchecked.txt` (`entry_id status detail url next`; status
+  BibTeX; `--learn` writes the schemas and the book fields into the library, and a schema
+  whose journal or edition record is missing goes into `.bibcc/<in>/missing_venues.yaml`,
+  with the record), `official_unchecked.txt` (`entry_id status detail url next`; status
   `no_bibtex`, `failed`, `mismatch`; `next` `by hand`, `retry`, `wait`, `check`).
 - `venues [PATH] [--venues FILE | --scope S] [--apply] [--journal-fields F] [--proceedings-fields F]` — audit
   the user and project venue libraries, each on its own (`--venues FILE`: only that file,
@@ -258,7 +268,7 @@ All in `.bibcc/<file>/` next to the input (`--log-dir DIR`: `DIR/<file>/`); logs
 
 | Command | Reports |
 |---------|---------|
-| `check` | `missing_fields.txt`, `title_case.txt`, `smart_protection.txt`, `citation_keys.txt`, `field_issues.txt`, `edition_fields.txt`, `edition_schemas.txt`, `official_fields.txt`, `official_venues.txt`, `official_unchecked.txt` |
+| `check` | `missing_fields.txt`, `title_case.txt`, `smart_protection.txt`, `citation_keys.txt`, `field_issues.txt`, `edition_fields.txt`, `edition_schemas.txt`, `official_fields.txt`, `official_venues.txt`, `official_unchecked.txt`, `missing_venues.yaml` (`editions` and `official` with `--learn`) |
 | `complete` | `complete.diff`, `missing_venues.yaml`, `missing_venues.txt`, `conflicts.txt`, `incomplete_entries.txt`, `venue_check.txt` (online) |
 | `add` | staging `.bib`, `add.txt`, `missing_venues.yaml` |
 | `upgrade` | `upgrade.txt`, `upgrade.diff`, `missing_venues.yaml`, `published.txt` (report-only, next to the first PATH) |
@@ -275,7 +285,11 @@ Where: user library + project library, merged (above); the lab's shared one is
 kind) means the venue has no month: a cross-month event or a non-monthly journal (TMLR).
 The previous edition's month is never copied. Proceedings records may
 carry `interim:` booktitles (sources `cvf` / `openreview`) linking the pre-proceedings name
-to the published one. Matching ignores braces/case/`\&`/extra spaces; journals also match by
+to the published one. Proceedings published as several books (the LNCS volumes of ECCV or
+MICCAI, whose Springer chapter exports lack the `volume` and `part`) may carry `books:`,
+mapping each book's ISBN, as it appears in its chapters' DOIs (`10.1007/978-…_13`), to its
+`volume` and `part`; `complete` fills them into an entry by its DOI, and `check official`
+learns them with `--learn` instead of reporting them as `local_only`. Matching ignores braces/case/`\&`/extra spaces; journals also match by
 ISSN; proceedings by name+year or interim booktitle. A third list, `families:` (`name`,
 `acronym`, `aliases`, `fields`, `entry_fields`, `learned_from`), describes a conference
 across its editions: its `fields` apply to every edition (the edition's value wins), and

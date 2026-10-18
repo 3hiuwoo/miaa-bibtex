@@ -63,7 +63,12 @@ hand. The family records also carry where a conference's official BibTeX comes f
 A schema (`entry_fields`) lists the per-paper fields a venue's official BibTeX has; `check
 editions` checks entries against it and `check missing` skips fields outside it. bibcc learns
 them: `check official --learn` from the downloaded BibTeX, and `check editions --learn` from
-the entries alone. For `schema_lacks` and `schema_differs` rows, follow the
+the entries alone. A schema learned for a journal or an edition that the library has no
+record of goes into `.bibcc/<file>/missing_venues.yaml`, with the record; fill its remaining
+blanks and `complete --update-venues --scope project` adds both. The same `--learn` of
+`check official` also learns the `books:` table of proceedings published as several books
+(the LNCS `volume` and `part`, keyed by the ISBN in the chapters' DOIs). For `schema_lacks`,
+`schema_differs`, and `books_lack` rows, follow the
 master table in `miaa-bibtex-core`.
 To reuse a survey's venues elsewhere, merge its project library into the user library once the
 user agrees (it only adds; differing values are kept and reported):
@@ -74,7 +79,7 @@ layout settings into `examples/config/miaa.yaml`.
 ## Rows this skill owns
 
 From the master table in `miaa-bibtex-core`: `official_venues.txt` (`library_lacks`,
-`library_differs`, `schema_lacks`, `schema_differs`), `edition_schemas.txt`
+`library_differs`, `schema_lacks`, `schema_differs`, `books_lack`), `edition_schemas.txt`
 (`schema_lacks`, `schema_differs`), the `check venues` cross-edition gaps and shared values, and the
 `missing_venues.yaml` blank values and blank `month`.
 
