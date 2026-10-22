@@ -1,6 +1,6 @@
 ---
 name: miaa-bibtex-decide
-description: Decide and set the content the agent must judge: citation keys, title case, brace protection, and taxonomy placement. Use to decide or rename a citation key, fix title case, brace protected terms such as acronyms and method names, or choose which taxonomy file an entry belongs in. Scope is tunable by the request, for example only check quotation or only keys. Applies to any .bib file or folder, whether or not bibcc created it. Runs under any composer or when the user names this stage. Loads miaa-bibtex-core.
+description: Decide and set the content the agent must judge, such as citation keys, title case, brace protection, and taxonomy placement. Use to decide or rename a citation key, fix title case, brace protected terms such as acronyms and method names, or choose which taxonomy file an entry belongs in. Scope is tunable by the request, for example only check quotation or only keys. Applies to any .bib file or folder, whether or not bibcc created it. Runs under any composer or when the user names this stage. Loads miaa-bibtex-core.
 metadata:
   author: MIAA lab
   version: "1.0"

@@ -136,7 +136,9 @@ Writes only with the `--apply` options listed. Lists the empty entries it skips.
   BibTeX; `--learn` writes the schemas and the book fields into the library, and a schema
   whose journal or edition record is missing goes into `.bibcc/<in>/missing_venues.yaml`,
   with the record), `official_unchecked.txt` (`entry_id status detail url next`; status
-  `no_bibtex`, `failed`, `mismatch`; `next` `by hand`, `retry`, `wait`, `check`).
+  `no_bibtex`, `failed`, `mismatch`; `next` `by hand`, `retry`, `wait`, `check`; `by hand`
+  also covers a NeurIPS or ICLR paper missing from an older year's proceedings and an
+  OpenReview paper the search doesn't find, whose `url` is the entry's forum page).
 - `venues [PATH] [--venues FILE | --scope S] [--apply] [--journal-fields F] [--proceedings-fields F]` — audit
   the user and project venue libraries, each on its own (`--venues FILE`: only that file,
   a `missing_venues.yaml` works too; `--scope`: only that library), including fields one

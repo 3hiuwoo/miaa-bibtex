@@ -175,7 +175,7 @@ rows of their own: an `official` row with an empty `next` is done.
 | `add.txt` | status `interim` | acquire | Mark it (hard rule 5); `upgrade` picks it up later |
 | `add.txt` | status `duplicate` | acquire | Already in the tree: report only |
 | `add.txt` | status `metadata` | acquire, upgrade | Not done (hard rule 1): get the official BibTeX by the ladder, or let `upgrade` replace it |
-| `official_unchecked.txt` | `next` = `by hand` (AAAI, ACM, Elsevier) | acquire, verify | Fetch the official BibTeX by the ladder into `WORK/exports/<key>.bib`; `bibcc check official FILE --local WORK/exports/ --offline` |
+| `official_unchecked.txt` | `next` = `by hand` (AAAI, ACM, Elsevier; a NeurIPS or ICLR paper missing from an older year's proceedings; an OpenReview paper the search doesn't find) | acquire, verify | Fetch the official BibTeX by the ladder from the row's `url` into `WORK/exports/<key>.bib`; `bibcc check official FILE --local WORK/exports/ --offline` |
 | `official_unchecked.txt` | `mismatch` | verify | The entry's DOI or title points at another paper: open the URL, fix the entry's `doi` or identity, check again |
 | `official_unchecked.txt` | `next` = `retry` | acquire, upgrade, verify | The lookup failed: run `check official` again after a pause with a larger `--delay`; then the ladder |
 | `official_unchecked.txt` | `next` = `wait` | upgrade | Nothing now: the entry is interim; `upgrade` later |

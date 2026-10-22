@@ -1,6 +1,6 @@
 ---
 name: miaa-bibtex-pdfs
-description: Download each entry's PDF and save it as <citation key>.pdf, then verify the library. Use when the user wants the PDFs for a batch or tree fetched and named by citation key, when aligning a PDF folder with a .bib, or when renaming reference-manager exports. Keys must be final first. Runs under the miaa-bibtex-curate composer or when the user names this stage. Loads miaa-bibtex-core.
+description: Download each entry's PDF and save it as CITATION_KEY.pdf, then verify the library. Use when the user wants the PDFs for a batch or tree fetched and named by citation key, when aligning a PDF folder with a .bib, or when renaming reference-manager exports. Keys must be final first. Runs under the miaa-bibtex-curate composer or when the user names this stage. Loads miaa-bibtex-core.
 metadata:
   author: MIAA lab
   version: "1.0"
